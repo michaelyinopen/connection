@@ -43,6 +43,7 @@ function App() {
         }
         socket.onmessage = e => {
           // do something useful
+          console.log("e raw", e)
           const message = JSON.parse(e.data)
           console.log("e", message)
         }
@@ -88,12 +89,8 @@ function App() {
           Online: {online ? 'true' : 'false'}<br />
           Login: {loggedIn ? 'logged in' : loggingIn ? 'in progress' : 'error'}<br />
           Websocket open: {webSocketOpen ? 'true' : 'false'}<br />
-          Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
     </>
   )
 }
