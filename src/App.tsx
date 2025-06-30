@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { createRetrier } from './retryBackoff'
 import './App.css'
 
 function App() {
@@ -18,32 +19,35 @@ function App() {
 
   const supportsWebSocket = useMemo(() => 'WebSocket' in window && window.WebSocket.CLOSING === 2, [])
   const socketRef = useRef<WebSocket>(undefined)
+  const [webSocketConnecting, setWebSocketConnecting] = useState(false)
   const [webSocketOpen, setWebSocketOpen] = useState(() => socketRef.current?.readyState === WebSocket.OPEN)
 
   useEffect(() => {
     const controller = new AbortController()
+    const retrier = createRetrier()
 
     const connect = () => {
       if (supportsWebSocket) {
+        setWebSocketConnecting(true)
         const socket = new WebSocket("/ws")
-        socket.onopen = () => {
-          console.log("ws opened")
-          setWebSocketOpen(true)
-        }
         socket.onerror = (event) => {
           console.log("ws errored", event)
-          setWebSocketOpen(false)
-          // check unauthorized, then retry login instead
-          // reconnect
+          // onclose will be called
+        }
+        socket.onopen = () => {
+          console.log("ws opened")
+          setWebSocketConnecting(false)
+          setWebSocketOpen(true)
+          retrier.reset()
         }
         socket.onclose = () => {
           console.log("ws closed")
+          setWebSocketConnecting(false)
           setWebSocketOpen(false)
-          // reconnect
+          retrier.retryWebSocketConnect()
         }
         socket.onmessage = e => {
           // do something useful
-          console.log("e raw", e)
           const message = JSON.parse(e.data)
           console.log("e", message)
         }
@@ -61,22 +65,27 @@ function App() {
           setLoggingIn(false)
           setLoggedIn(true)
           setLoginErrored(false)
+          retrier.setLoggedIn(new Date())
           connect()
+          return
         }
         setLoggingIn(false)
         setLoginErrored(true)
-        // retry login
+        retrier.retryLogin()
       }).catch(() => {
         setLoggingIn(false)
         setLoginErrored(true)
-        // retry login
+        retrier.retryLogin()
       })
     }
 
+    retrier.setRetryLogin(login)
+    retrier.setRetryWebSocketConnect(connect)
     login()
 
     return () => {
       controller.abort()
+      retrier.abort()
       socketRef.current?.close()
     }
   }, [supportsWebSocket])
@@ -88,7 +97,7 @@ function App() {
         <p>
           Online: {online ? 'true' : 'false'}<br />
           Login: {loggedIn ? 'logged in' : loggingIn ? 'in progress' : 'error'}<br />
-          Websocket open: {webSocketOpen ? 'true' : 'false'}<br />
+          Websocket open: {webSocketConnecting ? 'connecting' : webSocketOpen ? 'true' : 'false'}<br />
         </p>
       </div>
     </>

@@ -10,11 +10,12 @@ import { getNextUserId } from './getNextUserId.ts'
 
 class WebSocketWithUserId extends WebSocket {
   id: number
+  isAlive: boolean
 }
 
 declare module "express-session" {
   interface SessionData {
-    userId: number 
+    userId: number
   }
 }
 
@@ -35,7 +36,7 @@ const sessionParser = session({
   secret: "keyboard cat",
   resave: false,
   saveUninitialized: false,
-  cookie:{
+  cookie: {
     maxAge: 8640000000 //ms = 100 days
   },
   rolling: true,
@@ -55,17 +56,17 @@ app.post('/login', function (request, response) {
 });
 
 app.delete('/logout', function (request, response) {
-  const ws = map.get(request.session.userId);
+  const ws = map.get(request.session.userId)
 
   console.log('Destroying session');
   request.session.destroy(function () {
     if (ws) ws.close();
 
     response.send({ result: 'OK', message: 'Session destroyed' });
-  });
-});
+  })
+})
 
-const server = http.createServer(app);
+const server = http.createServer(app)
 
 const wss = new WebSocketServer({
   // port: 8080,
@@ -76,7 +77,7 @@ const wss = new WebSocketServer({
 })
 
 server.on('upgrade', function (request, socket, head) {
-  socket.on('error', console.error);
+  socket.on('error', console.error)
 
   console.log('Parsing session from request...')
 
@@ -85,35 +86,64 @@ server.on('upgrade', function (request, socket, head) {
   sessionParser(req, ({} as Response), () => {
     if (!req.session?.userId) {
       console.log('Missing session user id')
-      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-      socket.destroy();
+      socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
+      socket.destroy()
       return
     }
 
-    console.log('Session is parsed!');
+    console.log('Session is parsed!')
 
-    socket.removeListener('error', console.error);
+    socket.removeListener('error', console.error)
 
     wss.handleUpgrade(request, socket, head, function (ws) {
-      wss.emit('connection', ws, request);
-    });
-  });
-});
+      wss.emit('connection', ws, request)
+    })
+  })
+})
+
+function heartbeat(this: WebSocketWithUserId) {
+  console.log(`client %d pong`, this.id)
+  this.isAlive = true
+}
 
 wss.on('connection', function connection(ws, request) {
   const userId = (request as Request).session.userId
-
+  if (map.has(userId)) {
+    console.error('%d multiple connections', userId)
+    return
+  }
   map.set(userId, ws);
 
   ws.id = userId
+  ws.isAlive = true;
   ws.on('error', console.error)
 
+  ws.on('pong', heartbeat)
+
   ws.on('close', () => {
+    map.delete(userId)
     console.log('Client %d connection closed', ws.id)
   })
 
   console.log('Client %d connected', ws.id)
 })
+
+const interval = setInterval(function ping() {
+  console.log('server ping')
+  map.values().forEach(function each(ws) {
+    console.log('checking %d alive', ws.id)
+    if (ws.isAlive === false) {
+      console.log('calling terminate in %d', ws.id)
+      return ws.terminate()
+    }
+
+    ws.isAlive = false;
+    ws.ping()
+    console.log('pinged %d', ws.id)
+  })
+}, 30000)
+
+wss.on('close', () => clearInterval(interval))
 
 //
 // Start the server.
