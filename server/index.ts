@@ -22,7 +22,7 @@ declare module "express-session" {
 const app = express();
 const map = new Map();
 const SqliteStore = sqliteSessionStore(session)
-const db = new sqlite("sessions.db", { verbose: console.log })
+const db = new sqlite("sessions.db")
 db.pragma('journal_mode = WAL')
 
 const sessionParser = session({
@@ -50,7 +50,6 @@ app.post('/login', function (request, response) {
   //
   const id = request.session.userId ?? getNextUserId()
 
-  console.log(`Updating session for user ${id}`)
   request.session.userId = id;
   response.send({ result: 'OK', message: 'Session updated' })
 });
@@ -58,7 +57,6 @@ app.post('/login', function (request, response) {
 app.delete('/logout', function (request, response) {
   const ws = map.get(request.session.userId)
 
-  console.log('Destroying session');
   request.session.destroy(function () {
     if (ws) ws.close();
 
@@ -79,19 +77,14 @@ const wss = new WebSocketServer({
 server.on('upgrade', function (request, socket, head) {
   socket.on('error', console.error)
 
-  console.log('Parsing session from request...')
-
   const req = request as Request
 
   sessionParser(req, ({} as Response), () => {
     if (!req.session?.userId) {
-      console.log('Missing session user id')
       socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
       socket.destroy()
       return
     }
-
-    console.log('Session is parsed!')
 
     socket.removeListener('error', console.error)
 
@@ -102,14 +95,12 @@ server.on('upgrade', function (request, socket, head) {
 })
 
 function heartbeat(this: WebSocketWithUserId) {
-  console.log(`client %d pong`, this.id)
   this.isAlive = true
 }
 
 wss.on('connection', function connection(ws, request) {
   const userId = (request as Request).session.userId
   if (map.has(userId)) {
-    console.error('%d multiple connections', userId)
     return
   }
   map.set(userId, ws);
@@ -122,24 +113,17 @@ wss.on('connection', function connection(ws, request) {
 
   ws.on('close', () => {
     map.delete(userId)
-    console.log('Client %d connection closed', ws.id)
   })
-
-  console.log('Client %d connected', ws.id)
 })
 
 const interval = setInterval(function ping() {
-  console.log('server ping')
   map.values().forEach(function each(ws) {
-    console.log('checking %d alive', ws.id)
     if (ws.isAlive === false) {
-      console.log('calling terminate in %d', ws.id)
       return ws.terminate()
     }
 
     ws.isAlive = false;
     ws.ping()
-    console.log('pinged %d', ws.id)
   })
 }, 30000)
 

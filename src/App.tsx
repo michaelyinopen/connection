@@ -1,60 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRetrier } from './retryBackoff'
-import './App.css'
+import { getStatus, OnlineStatus } from './onlineStatus'
 import { OfflineIcon } from './icons/OfflineIcon'
 import { OnlineIcon } from './icons/OnlineIcon'
 import { LoadingIcon } from './icons/LoadingIcon'
-
-type OnlineStatus = 'Offline' | 'Connecting' | 'Retrying' | 'Online'
-const OnlineStatus = {
-  Offline: 'Offline',
-  Connecting: 'Connecting',
-  Retrying: 'Retrying',
-  Online: 'Online'
-} as const
-
-function getStatus({
-  online,
-  isFirstTimeLogin,
-  loggingIn,
-  loggedIn,
-  isFirstTimeWebSocket,
-  webSocketConnecting,
-  webSocketOpen
-}: { [key in string]: boolean }): OnlineStatus {
-  if (!online) {
-    return OnlineStatus.Offline
-  }
-
-  if (loggingIn && isFirstTimeLogin) {
-    return OnlineStatus.Connecting
-  }
-
-  if (loggingIn && !isFirstTimeLogin) {
-    return OnlineStatus.Retrying
-  }
-
-  // not logging in
-  if (!loggedIn) {
-    return OnlineStatus.Offline
-  }
-
-  // logged in
-  if (webSocketConnecting && isFirstTimeWebSocket) {
-    return OnlineStatus.Connecting
-  }
-
-  if (webSocketConnecting && !isFirstTimeWebSocket) {
-    return OnlineStatus.Retrying
-  }
-
-  // not web socket connecting
-  if (webSocketOpen) {
-    return OnlineStatus.Online
-  }
-
-  return OnlineStatus.Offline
-}
+import './App.css'
 
 function App() {
   const [online, setOnline] = useState(() => window.navigator.onLine)
