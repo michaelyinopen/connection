@@ -7,11 +7,9 @@ const listOfBackoffMs = [
   20000,  // 20s
   30000,  // 30s
   60000,  // 1 minute
-  120000, // 2 minute
-  300000, // 5 minute
 ]
 
-// if login failed: retry with backoff up to 5 minutes
+// if login failed: retry with backoff up to 1 minute
 
 // when web socket error/ disconnect
 // then, retry web socket immediately

@@ -17,3 +17,11 @@ This repo contains a server to provide a websocket connection, and a React clien
 - React
 - Vite
 - Typescript
+
+## Status
+- Offline
+- Connecting/ Retrying
+- Online (open web socket connection)
+
+## Troubleshoot
+`console.log` messages in the browser could help identify issues
