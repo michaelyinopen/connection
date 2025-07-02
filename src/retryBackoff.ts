@@ -27,8 +27,8 @@ export function createRetrier() {
   let webSocketConnectBackoffIndex = 0
   let loggedInDateTime = minDateTime
 
-  let loginTimeoutId: number = 0
-  let webSocketConnectTimeoutId: number = 0
+  let loginTimeoutId: NodeJS.Timeout
+  let webSocketConnectTimeoutId: NodeJS.Timeout
 
   let aborted = false
 

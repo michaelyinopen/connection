@@ -23,5 +23,12 @@ This repo contains a server to provide a websocket connection, and a React clien
 - Connecting/ Retrying
 - Online (open web socket connection)
 
+## User session
+The user keeps a cookie id in the browser. The server stores these user sessions in a SQLite database.
+
+1 user = 1 browser
+
+How to handle different tabs of the same browser?
+
 ## Troubleshoot
 `console.log` messages in the browser could help identify issues

@@ -1,12 +1,13 @@
 import http from 'http'
 import express from 'express'
 import type { Request, Response } from 'express'
-import sqlite from 'better-sqlite3'
 import session from 'express-session'
 import sqliteSessionStore from 'better-sqlite3-session-store'
 import { WebSocketServer, WebSocket } from 'ws'
 
-import { getNextUserId } from './getNextUserId.ts'
+import { db } from './db.ts'
+import { createUser } from './users.ts'
+import { getNextSocketId } from './getNextSocketId.ts'
 
 class WebSocketWithUserId extends WebSocket {
   id: number
@@ -19,11 +20,9 @@ declare module "express-session" {
   }
 }
 
-const app = express();
-const map = new Map();
+const app = express()
+const map = new Map()
 const SqliteStore = sqliteSessionStore(session)
-const db = new sqlite("sessions.db")
-db.pragma('journal_mode = WAL')
 
 const sessionParser = session({
   store: new SqliteStore({
@@ -48,19 +47,19 @@ app.post('/login', function (request, response) {
   //
   // "Log in" user and set userId to session.
   //
-  const id = request.session.userId ?? getNextUserId()
+  const id = request.session.userId ?? createUser()
 
-  request.session.userId = id;
+  request.session.userId = id
   response.send({ result: 'OK', message: 'Session updated' })
-});
+})
 
 app.delete('/logout', function (request, response) {
   const ws = map.get(request.session.userId)
 
   request.session.destroy(function () {
-    if (ws) ws.close();
+    if (ws) ws.close()
 
-    response.send({ result: 'OK', message: 'Session destroyed' });
+    response.send({ result: 'OK', message: 'Session destroyed' })
   })
 })
 
@@ -99,20 +98,18 @@ function heartbeat(this: WebSocketWithUserId) {
 }
 
 wss.on('connection', function connection(ws, request) {
-  const userId = (request as Request).session.userId
-  if (map.has(userId)) {
-    return
-  }
-  map.set(userId, ws);
+  // (request as Request).session.userId
+  const socketId = getNextSocketId()
+  map.set(socketId, ws)
 
-  ws.id = userId
-  ws.isAlive = true;
+  ws.id = socketId
+  ws.isAlive = true
   ws.on('error', console.error)
 
   ws.on('pong', heartbeat)
 
   ws.on('close', () => {
-    map.delete(userId)
+    map.delete(socketId)
   })
 })
 
@@ -122,7 +119,7 @@ const interval = setInterval(function ping() {
       return ws.terminate()
     }
 
-    ws.isAlive = false;
+    ws.isAlive = false
     ws.ping()
   })
 }, 30000)
@@ -133,5 +130,5 @@ wss.on('close', () => clearInterval(interval))
 // Start the server.
 //
 server.listen(8080, function () {
-  console.log('Listening on http://localhost:8080');
-});
+  console.log('Listening on http://localhost:8080')
+})
