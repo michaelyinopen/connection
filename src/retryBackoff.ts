@@ -30,6 +30,8 @@ export function createRetrier() {
   let loginTimeoutId: number = 0
   let webSocketConnectTimeoutId: number = 0
 
+  let aborted = false
+
   function setRetryLogin(value: () => void) {
     loginFunction = value
   }
@@ -44,7 +46,7 @@ export function createRetrier() {
   }
 
   function retryLogin() {
-    if (!loginFunction) {
+    if (!loginFunction || aborted) {
       return
     }
     loginTimeoutId = setTimeout(loginFunction, listOfBackoffMs[loginBackoffIndex])
@@ -52,7 +54,7 @@ export function createRetrier() {
   }
 
   function retryWebSocketConnect() {
-    if (!loginFunction || !webSocketConnectFunction) {
+    if (!loginFunction || !webSocketConnectFunction || aborted) {
       return
     }
 
@@ -84,6 +86,7 @@ export function createRetrier() {
   function abort() {
     clearTimeout(loginTimeoutId)
     clearTimeout(webSocketConnectTimeoutId)
+    aborted = true
   }
 
   return {
