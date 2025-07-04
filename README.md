@@ -34,4 +34,4 @@ How to handle different tabs of the same browser?
 `console.log` messages in the browser could help identify issues.
 
 ## Database
-An SQLite file located according to the config setting.
+An SQLite file located according to the environmental setting.
