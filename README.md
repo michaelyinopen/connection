@@ -5,7 +5,7 @@ This repo contains a server to provide a websocket connection, and a React clien
 - The client does not need to login, and keeps an identity using a persistent(100 days) cookie.
 - First, an https request is made. Then, the connection is upgraded to a websocket connection.
 - The server will keep pinging the client to check for broken connections.
-- The client will show offline, broken connection, or online status.
+- The client will show offline, connecting, or online status.
 - The client will attempt to reconnect with a backoff.
 
 ## Technologies
@@ -31,4 +31,7 @@ The user keeps a cookie id in the browser. The server stores these user sessions
 How to handle different tabs of the same browser?
 
 ## Troubleshoot
-`console.log` messages in the browser could help identify issues
+`console.log` messages in the browser could help identify issues.
+
+## Database
+An SQLite file located according to the config setting.
