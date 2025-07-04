@@ -1,0 +1,28 @@
+{
+  "name": "@michaelyinopen/connection-server",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-transform-types index.ts",
+    "watch": "node --watch --experimental-transform-types index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "better-sqlite3": "^12.1.0",
+    "better-sqlite3-session-store": "^0.1.0",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.3",
+    "@types/express-session": "^1.18.2",
+    "@types/node": "^24.0.3",
+    "@types/ws": "^8.18.1"
+  }
+}

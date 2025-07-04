@@ -1,0 +1,24 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.status-icon-stroke {
+  stroke: deepskyblue;
+}
+
+@keyframes loading-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-icon {
+  animation: loading-spin infinite 5s linear;
+}
