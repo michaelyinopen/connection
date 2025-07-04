@@ -35,3 +35,19 @@ How to handle different tabs of the same browser?
 
 ## Database
 An SQLite file located according to the environmental setting.
+
+## How to run
+1. Create a .env file at `server` directory that includes
+```
+DATABASE_PATH=sessions.db
+```
+
+2. 
+```
+npm run start-server
+
+// another terminal
+npm run dev
+```
+
+3. Visit `http://localhost:5173/` in browser.
