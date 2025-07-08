@@ -1,0 +1,29 @@
+name: deploy api on linode
+
+on:
+    push:
+        branches: [ main ]
+
+jobs:
+  deploy-server:
+    runs-on: ubuntu-latest
+    env:
+        remote_host: ${{ secrets.LINODE_HOST }}
+        remote_port: ${{ secrets.LINODE_PORT }}
+        remote_user: ${{ secrets.LINODE_USER }}
+        remote_key: ${{ secrets.LINODE_SSH_PRIVATE_KEY }}
+        local_dir: "server/"
+        remote_dir: ${{secrets.LINODE_API_DIRECTORY}}
+    steps:            
+    - name: Checkout the repo
+      uses: actions/checkout@v4.2.2
+
+    - name: Upload
+      run: |
+        mkdir ~/.ssh
+        echo "$remote_key" > ~/.ssh/gh_actions_key
+        chmod 600 ~/.ssh/gh_actions_key
+        rsync -avzr --delete -e "ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no" ${local_dir} ${remote_user}@${remote_host}:${remote_dir}
+        
+    - name: npm install
+      run: ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no ${remote_user}@${remote_host} "cd ${remote_dir} && npm install"
