@@ -40,6 +40,7 @@ An SQLite file located according to the environmental setting.
 1. Create a .env file at `server` directory that includes
 ```
 DATABASE_PATH=sessions.db
+PORT=8080
 ```
 
 2. 

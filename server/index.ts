@@ -9,6 +9,8 @@ import { db } from './db.ts'
 import { createUser } from './users.ts'
 import { getNextSocketId } from './getNextSocketId.ts'
 
+const port = process.env.PORT
+
 class WebSocketWithUserId extends WebSocket {
   id: number
   isAlive: boolean
@@ -129,6 +131,6 @@ wss.on('close', () => clearInterval(interval))
 //
 // Start the server.
 //
-server.listen(8080, function () {
-  console.log('Listening on http://localhost:8080')
+server.listen(port, function () {
+  console.log('Listening on http://localhost:%s', port)
 })
