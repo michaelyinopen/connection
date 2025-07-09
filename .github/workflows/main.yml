@@ -14,6 +14,7 @@ jobs:
         remote_key: ${{ secrets.LINODE_SSH_PRIVATE_KEY }}
         local_dir: "server/"
         remote_dir: ${{secrets.LINODE_SERVER_DIRECTORY}}
+        database_dir: ${{secrets.LINODE_DATABASE_DIRECTORY}}
     steps:            
     - name: Checkout the repo
       uses: actions/checkout@v4.2.2
@@ -23,7 +24,7 @@ jobs:
         mkdir ~/.ssh
         echo "$remote_key" > ~/.ssh/gh_actions_key
         chmod 600 ~/.ssh/gh_actions_key
-        rsync -avzr --delete -e "ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no" ${local_dir} ${remote_user}@${remote_host}:${remote_dir}
+        rsync -avzr --exclude=${database_dir} --delete -e "ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no" ${local_dir} ${remote_user}@${remote_host}:${remote_dir}
     
     - name: npm install
       run: ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no ${remote_user}@${remote_host} "cd ${remote_dir} && npm install"
