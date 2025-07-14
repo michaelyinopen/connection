@@ -29,6 +29,9 @@ jobs:
     - name: npm install
       run: ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no ${remote_user}@${remote_host} "cd ${remote_dir} && npm install"
 
+    - name: Restart
+      run: ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no ${remote_user}@${remote_host} 'sudo /usr/bin/systemctl restart connection-server.service'
+
   deploy-website:
     runs-on: ubuntu-latest
     env:
@@ -59,6 +62,3 @@ jobs:
         echo "$remote_key" > ~/.ssh/gh_actions_key
         chmod 600 ~/.ssh/gh_actions_key
         rsync -avzr --delete -e "ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no" ${local_dir} ${remote_user}@${remote_host}:${remote_dir}
-
-    - name: Restart
-      run: ssh -p ${remote_port} -i ~/.ssh/gh_actions_key -o StrictHostKeyChecking=no ${remote_user}@${remote_host} 'sudo /usr/bin/systemctl restart connection-server.service'
