@@ -45,7 +45,7 @@ const sessionParser = session({
 
 app.use(sessionParser)
 
-app.post('/login', function (request, response) {
+app.post('/api/login', function (request, response) {
   //
   // "Log in" user and set userId to session.
   //
@@ -56,7 +56,7 @@ app.post('/login', function (request, response) {
   response.send({ result: 'OK', message: 'Session updated' })
 })
 
-app.delete('/logout', function (request, response) {
+app.delete('/api/logout', function (request, response) {
   const ws = map.get(request.session.userId)
 
   request.session.destroy(function () {
