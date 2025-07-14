@@ -49,7 +49,6 @@ app.post('/api/login', function (request, response) {
   //
   // "Log in" user and set userId to session.
   //
-  console.log('logging in')
   const id = request.session.userId ?? createUser()
 
   request.session.userId = id
