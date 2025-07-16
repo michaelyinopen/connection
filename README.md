@@ -8,6 +8,9 @@ This repo contains a server to provide a websocket connection, and a React clien
 - The client will show offline, connecting, or online status.
 - The client will attempt to reconnect with a backoff.
 
+## Live DEMO
+https://connection.michael-yin.net
+
 ## Technologies
 
 - Node
@@ -37,7 +40,7 @@ How to handle different tabs of the same browser?
 An SQLite file located according to the environmental setting.
 
 ## How to run
-1. Create a .env file at `server` directory that includes
+1. Create a `.env` file at `server` directory that includes
 ```
 NODE_ENV=Development
 DATABASE_PATH=sessions.db
