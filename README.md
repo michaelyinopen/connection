@@ -39,8 +39,10 @@ An SQLite file located according to the environmental setting.
 ## How to run
 1. Create a .env file at `server` directory that includes
 ```
+NODE_ENV=Development
 DATABASE_PATH=sessions.db
 PORT=8080
+SESSION_SECRET=keyboard cat
 ```
 
 2. 

@@ -27,7 +27,7 @@ const app = express()
 const map = new Map()
 const SqliteStore = sqliteSessionStore(session)
 
-const sessionParser = session({
+const sessionOptions: session.SessionOptions = {
   store: new SqliteStore({
     client: db,
     expired: {
@@ -42,7 +42,14 @@ const sessionParser = session({
     maxAge: 8640000000 //ms = 100 days
   },
   rolling: true,
-})
+}
+
+if (app.get('env') === 'production') {
+  app.set('trust proxy', 1) // trust first proxy
+  sessionOptions.cookie.secure = true // serve secure cookies
+}
+
+const sessionParser = session(sessionOptions)
 
 app.use(sessionParser)
 
