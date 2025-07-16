@@ -46,6 +46,7 @@ const sessionOptions: session.SessionOptions = {
 
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1) // trust first proxy
+  sessionOptions.cookie.domain = "connection.michael-yin.net"
   sessionOptions.cookie.secure = true // serve secure cookies
 }
 
