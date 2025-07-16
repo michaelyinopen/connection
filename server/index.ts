@@ -10,6 +10,7 @@ import { createUser } from './users.ts'
 import { getNextSocketId } from './getNextSocketId.ts'
 
 const port = process.env.PORT
+const sessionSecret = process.env.SESSION_SECRET
 
 class WebSocketWithUserId extends WebSocket {
   id: number
@@ -34,7 +35,7 @@ const sessionParser = session({
       intervalMs: 900000 //ms = 15min
     },
   }),
-  secret: "keyboard cat",
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: {
