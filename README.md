@@ -26,20 +26,9 @@ https://connection.michael-yin.net
 - Connecting/ Retrying
 - Online (open web socket connection)
 
-## User session
-The user keeps a cookie id in the browser. The server stores these user sessions in a SQLite database.
-
-1 user = 1 browser
-
-How to handle different tabs of the same browser?
-
-## Troubleshoot
-`console.log` messages in the browser could help identify issues.
-
-## Database
-An SQLite file located according to the environmental setting.
-
 ## How to run
+Prerequisites: Node, npm.
+
 1. Create a `.env` file at `server` directory that includes
 ```
 NODE_ENV=Development
@@ -57,3 +46,19 @@ npm run dev
 ```
 
 3. Visit `http://localhost:5173/` in browser.
+
+## User session
+The user keeps a cookie id in the browser. The server stores these user sessions in a SQLite database file.
+
+1 user = 1 browser
+
+How to handle different tabs of the same browser? (not solved)
+
+## Inactive tab
+If the website disconnects when the browser tab is inactive (not the foreground tab of a non-minimized window), it will not retry reconnecting, until the browser tab is active again.
+
+## Troubleshoot
+`console.log` messages in the browser could help identify issues.
+
+## Database
+An SQLite file located according to the environmental setting.
