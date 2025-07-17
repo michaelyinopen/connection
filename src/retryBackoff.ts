@@ -19,7 +19,7 @@ const listOfBackoffMs = [
 const minDateTime = new Date('0001-01-01T00:00:00Z')
 const loginFreshMs = 3600000 // 1 hour
 
-export function createRetrier() {
+export function createRetrier(getIsVisible: () => boolean) {
   let loginFunction: (() => void) | undefined = undefined
   let webSocketConnectFunction: (() => void) | undefined = undefined
 
@@ -32,12 +32,37 @@ export function createRetrier() {
 
   let aborted = false
 
+  // store actions when not foreground tab of a non-minimized window
+  let pendingActions: Array<() => void> = []
+
   function setRetryLogin(value: () => void) {
-    loginFunction = value
+    loginFunction = function () {
+      const isVisible = getIsVisible()
+      if (isVisible) {
+        value()
+        return
+      }
+
+      loginBackoffIndex = 0
+      webSocketConnectBackoffIndex = 0
+      pendingActions = pendingActions.concat(loginFunction!)
+      return
+    }
   }
 
   function setRetryWebSocketConnect(value: () => void) {
-    webSocketConnectFunction = value
+    webSocketConnectFunction = function () {
+      const isVisible = getIsVisible()
+      if (isVisible) {
+        value()
+        return
+      }
+
+      loginBackoffIndex = 0
+      webSocketConnectBackoffIndex = 0
+      pendingActions = pendingActions.concat(webSocketConnectFunction!)
+      return
+    }
   }
 
   function setLoggedIn(dateTime: Date) {
@@ -89,12 +114,20 @@ export function createRetrier() {
     aborted = true
   }
 
+  function flushPendingActions() {
+    for (const action of pendingActions) {
+      action()
+    }
+    pendingActions = []
+  }
+
   return {
     setRetryLogin,
     setRetryWebSocketConnect,
     setLoggedIn,
     retryLogin,
     retryWebSocketConnect,
+    flushPendingActions,
     reset,
     abort,
   }

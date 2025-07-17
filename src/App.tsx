@@ -17,18 +17,6 @@ function App() {
     return () => controller.abort()
   }, [])
 
-  // // 'visible' or 'hidden'
-  // const [visibilityState, setVisibilityState] = useState(() => document.visibilityState)
-
-  // useEffect(() => {
-  //   const controller = new AbortController()
-  //   window.addEventListener("visibilitychange", () => {
-  //     setVisibilityState(document.visibilityState)
-  //   })
-
-  //   return () => controller.abort()
-  // }, [])
-
   const [isFirstTimeLogin, setIsFirstTimeLogin] = useState(true)
   const [loggingIn, setLoggingIn] = useState(false)
   const [loggedIn, setLoggedIn] = useState(false)
@@ -41,8 +29,12 @@ function App() {
   const [webSocketOpen, setWebSocketOpen] = useState(() => socketRef.current?.readyState === WebSocket.OPEN)
 
   useEffect(() => {
+    // foreground tab of a non-minimized window
+    let isVisible = document.visibilityState === 'visible'
+    const getIsVisible = () => isVisible
+
     const controller = new AbortController()
-    const retrier = createRetrier()
+    const retrier = createRetrier(getIsVisible)
 
     const connect = () => {
       if (!supportsWebSocket || !online) {
@@ -114,17 +106,16 @@ function App() {
       })
     }
 
-    retrier.setRetryLogin(() => {
-      if (document.visibilityState === 'visible') {
-        login()
-        return
-      }
-
-      // can this event be missed?
-      window.addEventListener("visibilitychange", login, { signal: controller.signal })
-    })
+    retrier.setRetryLogin(login)
     retrier.setRetryWebSocketConnect(connect)
     login()
+
+    window.addEventListener("visibilitychange", () => {
+      isVisible = document.visibilityState === 'visible'
+      if (isVisible) {
+        retrier.flushPendingActions()
+      }
+    }, { signal: controller.signal })
 
     return () => {
       controller.abort()
