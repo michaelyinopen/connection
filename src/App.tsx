@@ -17,6 +17,18 @@ function App() {
     return () => controller.abort()
   }, [])
 
+  // // 'visible' or 'hidden'
+  // const [visibilityState, setVisibilityState] = useState(() => document.visibilityState)
+
+  // useEffect(() => {
+  //   const controller = new AbortController()
+  //   window.addEventListener("visibilitychange", () => {
+  //     setVisibilityState(document.visibilityState)
+  //   })
+
+  //   return () => controller.abort()
+  // }, [])
+
   const [isFirstTimeLogin, setIsFirstTimeLogin] = useState(true)
   const [loggingIn, setLoggingIn] = useState(false)
   const [loggedIn, setLoggedIn] = useState(false)
@@ -33,38 +45,44 @@ function App() {
     const retrier = createRetrier()
 
     const connect = () => {
-      if (supportsWebSocket && online) {
-        setWebSocketConnecting(true)
-        console.log("ws connecting")
-        const socket = new WebSocket("/ws")
-        socket.onerror = (event) => {
-          console.log("ws errored", event)
-          // onclose will be called
-        }
-        socket.onopen = () => {
-          console.log("ws opened")
-          setIsFirstTimeWebSocket(false)
-          setWebSocketConnecting(false)
-          setWebSocketOpen(true)
-          retrier.reset()
-        }
-        socket.onclose = () => {
-          console.log("ws closed")
-          setIsFirstTimeWebSocket(false)
-          setWebSocketConnecting(false)
-          setWebSocketOpen(false)
-          retrier.retryWebSocketConnect()
-        }
-        socket.onmessage = e => {
-          // do something useful
-          const message = JSON.parse(e.data)
-          console.log("e", message)
-        }
-        socketRef.current = socket
+      if (!supportsWebSocket || !online) {
+        return
       }
+
+      setWebSocketConnecting(true)
+      console.log("ws connecting")
+      const socket = new WebSocket("/ws")
+      socket.onerror = (event) => {
+        console.log("ws errored", event)
+        // onclose will be called
+      }
+      socket.onopen = () => {
+        console.log("ws opened")
+        setIsFirstTimeWebSocket(false)
+        setWebSocketConnecting(false)
+        setWebSocketOpen(true)
+        retrier.reset()
+      }
+      socket.onclose = () => {
+        console.log("ws closed")
+        setIsFirstTimeWebSocket(false)
+        setWebSocketConnecting(false)
+        setWebSocketOpen(false)
+        retrier.retryWebSocketConnect()
+      }
+      socket.onmessage = e => {
+        // do something useful
+        const message = JSON.parse(e.data)
+        console.log("e", message)
+      }
+      socketRef.current = socket
     }
 
     const login = () => {
+      if (!online) {
+        return
+      }
+
       setLoggingIn(true)
       console.log("logging in")
       fetch('api/login', {
@@ -96,7 +114,15 @@ function App() {
       })
     }
 
-    retrier.setRetryLogin(login)
+    retrier.setRetryLogin(() => {
+      if (document.visibilityState === 'visible') {
+        login()
+        return
+      }
+
+      // can this event be missed?
+      window.addEventListener("visibilitychange", login, { signal: controller.signal })
+    })
     retrier.setRetryWebSocketConnect(connect)
     login()
 
