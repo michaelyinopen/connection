@@ -1,11 +1,11 @@
-
-export type OnlineStatus = 'Offline' | 'Connecting' | 'Retrying' | 'Online'
-export const OnlineStatus = {
+export const onlineStatus = {
   Offline: 'Offline',
   Connecting: 'Connecting',
   Retrying: 'Retrying',
   Online: 'Online'
 } as const
+
+export type OnlineStatus = typeof onlineStatus[keyof typeof onlineStatus]
 
 export function getStatus({
   online,
@@ -17,35 +17,35 @@ export function getStatus({
   webSocketOpen
 }: { [key in string]: boolean }): OnlineStatus {
   if (!online) {
-    return OnlineStatus.Offline
+    return onlineStatus.Offline
   }
 
   if (loggingIn && isFirstTimeLogin) {
-    return OnlineStatus.Connecting
+    return onlineStatus.Connecting
   }
 
   if (loggingIn && !isFirstTimeLogin) {
-    return OnlineStatus.Retrying
+    return onlineStatus.Retrying
   }
 
   // not logging in
   if (!loggedIn) {
-    return OnlineStatus.Offline
+    return onlineStatus.Offline
   }
 
   // logged in
   if (webSocketConnecting && isFirstTimeWebSocket) {
-    return OnlineStatus.Connecting
+    return onlineStatus.Connecting
   }
 
   if (webSocketConnecting && !isFirstTimeWebSocket) {
-    return OnlineStatus.Retrying
+    return onlineStatus.Retrying
   }
 
   // not web socket connecting
   if (webSocketOpen) {
-    return OnlineStatus.Online
+    return onlineStatus.Online
   }
 
-  return OnlineStatus.Offline
+  return onlineStatus.Offline
 }

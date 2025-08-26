@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createRetrier } from './retryBackoff'
-import { getStatus, OnlineStatus } from './onlineStatus'
+import { getStatus, onlineStatus } from './onlineStatus'
 import { OfflineIcon } from './icons/OfflineIcon'
 import { OnlineIcon } from './icons/OnlineIcon'
 import { LoadingIcon } from './icons/LoadingIcon'
@@ -140,9 +140,9 @@ function App() {
       <p>
         Make an HTTPS request and upgrade to a Secure Web Socket connection.
       </p>
-      {status === OnlineStatus.Offline && <OfflineIcon />}
-      {(status === OnlineStatus.Connecting || status === OnlineStatus.Retrying) && <LoadingIcon />}
-      {status === OnlineStatus.Online && <OnlineIcon />}
+      {status === onlineStatus.Offline && <OfflineIcon />}
+      {(status === onlineStatus.Connecting || status === onlineStatus.Retrying) && <LoadingIcon />}
+      {status === onlineStatus.Online && <OnlineIcon />}
       <p>
         {status}
       </p>

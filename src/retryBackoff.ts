@@ -27,8 +27,8 @@ export function createRetrier(getIsVisible: () => boolean) {
   let webSocketConnectBackoffIndex = 0
   let loggedInDateTime = minDateTime
 
-  let loginTimeoutId: NodeJS.Timeout
-  let webSocketConnectTimeoutId: NodeJS.Timeout
+  let loginTimeoutId: number | undefined
+  let webSocketConnectTimeoutId: number | undefined
 
   let aborted = false
 
@@ -74,7 +74,7 @@ export function createRetrier(getIsVisible: () => boolean) {
     if (!loginFunction || aborted) {
       return
     }
-    loginTimeoutId = setTimeout(loginFunction, listOfBackoffMs[loginBackoffIndex])
+    loginTimeoutId = window.setTimeout(loginFunction, listOfBackoffMs[loginBackoffIndex])
     loginBackoffIndex = loginBackoffIndex >= listOfBackoffMs.length - 1 ? loginBackoffIndex : loginBackoffIndex + 1
   }
 
@@ -85,7 +85,7 @@ export function createRetrier(getIsVisible: () => boolean) {
 
     // first, retry websocket connection immediately
     if (webSocketConnectBackoffIndex === 0) {
-      webSocketConnectTimeoutId = setTimeout(webSocketConnectFunction, 0)
+      webSocketConnectTimeoutId = window.setTimeout(webSocketConnectFunction, 0)
       webSocketConnectBackoffIndex = 1
       return
     }
@@ -93,13 +93,13 @@ export function createRetrier(getIsVisible: () => boolean) {
     // then, retry login if the the last login was long ago
     const loginStale = new Date().getTime() - loggedInDateTime.getTime() > loginFreshMs
     if (webSocketConnectBackoffIndex === 1 && loginBackoffIndex === 0 && loginStale) {
-      loginTimeoutId = setTimeout(loginFunction, 0)
+      loginTimeoutId = window.setTimeout(loginFunction, 0)
       loginBackoffIndex = 1
       return
     }
 
     // retry websocket connection with backoff
-    webSocketConnectTimeoutId = setTimeout(webSocketConnectFunction, listOfBackoffMs[webSocketConnectBackoffIndex])
+    webSocketConnectTimeoutId = window.setTimeout(webSocketConnectFunction, listOfBackoffMs[webSocketConnectBackoffIndex])
     webSocketConnectBackoffIndex = webSocketConnectBackoffIndex >= listOfBackoffMs.length - 1 ? webSocketConnectBackoffIndex : webSocketConnectBackoffIndex + 1
   }
 
