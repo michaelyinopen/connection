@@ -11,6 +11,7 @@ import { getNextSocketId } from './getNextSocketId.ts'
 
 const port = process.env.PORT
 const sessionSecret = process.env.SESSION_SECRET
+const allowedOrigin = process.env.ALLOWED_ORIGIN
 
 class WebSocketWithUserId extends WebSocket {
   id: number
@@ -39,7 +40,8 @@ const sessionOptions: session.SessionOptions = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 8640000000 //ms = 100 days
+    sameSite: 'lax',
+    maxAge: 8640000000, //ms = 100 days
   },
   rolling: true,
 }
@@ -81,6 +83,7 @@ const wss = new WebSocketServer({
   WebSocket: WebSocketWithUserId,
   clientTracking: false,
   noServer: true,
+  perMessageDeflate: false,
   // allowSynchronousEvents: true,
 })
 
@@ -88,6 +91,36 @@ server.on('upgrade', function (request, socket, head) {
   socket.on('error', console.error)
 
   const req = request as Request
+
+  if (app.get('env') === 'production') {
+    if (req.headers.origin !== undefined && req.headers.origin !== allowedOrigin) {
+      socket.write('HTTP/1.1 403 Unauthorized origin\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    if (req.headers.origin === undefined) {
+      // block if origin header is not present
+      socket.write('HTTP/1.1 403 Unauthorized origin\r\n\r\n')
+      socket.destroy()
+      return
+
+      // check referrer header if origin header is not present
+      // if (req.headers.referer === undefined) {
+      //   socket.write('HTTP/1.1 403 Unauthorized origin\r\n\r\n')
+      //   socket.destroy()
+      //   return
+      // }
+
+      // const referrerHostName = new URL(req.headers.referer).hostname
+
+      // if (referrerHostName !== allowedOrigin) {
+      //   socket.write('HTTP/1.1 403 Unauthorized origin\r\n\r\n')
+      //   socket.destroy()
+      //   return
+      // }
+    }
+  }
 
   sessionParser(req, ({} as Response), () => {
     if (!req.session?.userId) {
