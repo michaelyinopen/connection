@@ -11,6 +11,8 @@ import { getNextSocketId } from './getNextSocketId.ts'
 
 const port = process.env.PORT
 const sessionSecret = process.env.SESSION_SECRET
+const domain = process.env.DOMAIN
+const allowedOrigin = process.env.ALLOWED_ORIGIN
 
 class WebSocketWithUserId extends WebSocket {
   id: number
@@ -39,14 +41,15 @@ const sessionOptions: session.SessionOptions = {
   resave: false,
   saveUninitialized: false,
   cookie: {
-    maxAge: 8640000000 //ms = 100 days
+    sameSite: 'lax',
+    maxAge: 8640000000, //ms = 100 days
   },
   rolling: true,
 }
 
 if (app.get('env') === 'production') {
   app.set('trust proxy', 1) // trust first proxy
-  sessionOptions.cookie.domain = "connection.michael-yin.net"
+  sessionOptions.cookie.domain = domain
   sessionOptions.cookie.secure = true // serve secure cookies
 }
 
@@ -81,6 +84,7 @@ const wss = new WebSocketServer({
   WebSocket: WebSocketWithUserId,
   clientTracking: false,
   noServer: true,
+  perMessageDeflate: false,
   // allowSynchronousEvents: true,
 })
 
@@ -88,6 +92,24 @@ server.on('upgrade', function (request, socket, head) {
   socket.on('error', console.error)
 
   const req = request as Request
+
+  if (app.get('env') === 'production') {
+    if (req.headers.origin === undefined) {
+      // block if origin header is not present
+      socket.write('HTTP/1.1 403 Missing origin\r\n\r\n')
+      socket.destroy()
+      return
+    }
+
+    const originWithoutPort = req.headers.origin.endsWith(':443')
+      ? req.headers.origin.substring(0, req.headers.origin.length - 4)
+      : req.headers.origin
+    if (originWithoutPort !== allowedOrigin) {
+      socket.write('HTTP/1.1 403 Unauthorized origin\r\n\r\n')
+      socket.destroy()
+      return
+    }
+  }
 
   sessionParser(req, ({} as Response), () => {
     if (!req.session?.userId) {
