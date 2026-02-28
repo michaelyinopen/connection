@@ -37,6 +37,12 @@ PORT=8080
 SESSION_SECRET=keyboard cat
 ```
 
+In production, also set
+```
+DOMAIN=connection.michael-yin.net
+ALLOWED_ORIGIN=https://connection.michael-yin.net
+```
+
 2. 
 ```
 npm run start-server
